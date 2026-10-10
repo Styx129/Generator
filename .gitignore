@@ -1,0 +1,24 @@
+# Ігнорування файлів та папок, які не потрібно відстежувати Git
+*.exe
+*.o
+*.obj
+*.dll
+*.so
+*.out
+*.log
+*.tmp
+*.cache
+/build/
+/bin/
+/dist/
+.vscode/
+.idea/
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.user
+Thumbs.db
+*.DS_Store
+
+# Результати тестування
+variants.txt
