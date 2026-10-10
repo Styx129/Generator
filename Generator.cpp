@@ -15,7 +15,7 @@ char tasks[MAX_TASKS][MAX_TASK_LENGTH];
 int variants[MAX_VARIANTS][MAX_TASKS_PER_VARIANT];
 // Кількість завдань, зчитаних із файлу
 int taskCount = 0;
-
+// Функція для завантаження завдань із файлу
 bool loadTasks(const char* filename,char tasks[][MAX_TASK_LENGTH],int& taskCount) {
     // Відкриваємо файл для читання та перевіряємо його відкриття
     std::ifstream file(filename);
@@ -55,7 +55,6 @@ bool loadTasks(const char* filename,char tasks[][MAX_TASK_LENGTH],int& taskCount
     }
     return true;
 }
-
 // Функція для цілого числа з консолі
 int readPositiveInteger(const char* prompt){
     int value;
@@ -65,25 +64,60 @@ int readPositiveInteger(const char* prompt){
 
     return value;
 }
+// Функція для генерації варіантів
+void generateVariants(int variants[][MAX_TASKS_PER_VARIANT],int variantCount,int tasksPerVariant,int taskCount) {
+    int indexes[MAX_TASKS];
+    // Ініціалізація рандомайзера
+    std::random_device rand;
+    std::mt19937 generator(rand());
+    for (int i = 0; i < variantCount; i++) {
+        // Створюємо масив індексів усіх завдань
+        for (int j = 0; j < taskCount; j++) {
+            indexes[j] = j;
+        }
+        // Рандомайзер індексів завдань
+        std::shuffle(indexes,indexes + taskCount,generator);
+
+        // Записуємо вибрані завдання в матрицю
+        for (int j = 0; j < tasksPerVariant; j++) {
+            variants[i][j] = indexes[j];
+        }
+    }
+}
 
 int main() {
     // Встановлення кодування консолі на UTF-8
     SetConsoleOutputCP(CP_UTF8);
     SetConsoleCP(CP_UTF8);
-
     std::cout << "Генератор варіантів контрольної роботи\n\n";
     // Завантаження завдань із файлу
     if (!loadTasks("task.txt", tasks, taskCount)) {return 1;}
-
     std::cout << "Завантажено завдань: "<< taskCount << "\n\n";
-
-    // Зчитування кількості варіантів та завдань у кожному варіанті
+    // Зчитування кількості варіантів та завдань у кожному варіанті та перевірка їх
     int variantCount = readPositiveInteger("Введіть кількість варіантів: ");
+    if (variantCount < 1 || variantCount > MAX_VARIANTS) {
+        std::cerr << "Помилка: кількість варіантів має бути від 1 до " << MAX_VARIANTS << ".\n";
+        return 1;
+    }    
     int tasksPerVariant = readPositiveInteger("Введіть кількість завдань у варіанті: ");
-
+    if (tasksPerVariant < 1 || tasksPerVariant > MAX_TASKS_PER_VARIANT || tasksPerVariant > taskCount) {
+        std::cerr << "Помилка: некоректна кількість завдань "
+                  << "у варіанті.\n";
+        return 1;
+    }
     std::cout << "\nПараметри генерації:\n";
     std::cout << "Кількість варіантів: "<< variantCount << '\n';
     std::cout << "Завдань у кожному варіанті: "<< tasksPerVariant << '\n';
-
+    // Генерація варіантів
+    generateVariants(variants,variantCount,tasksPerVariant,taskCount);
+    std::cout << "\nЗгенеровані варіанти:\n";
+    // Виведення згенерованих варіантів у вигляді індексів
+    for (int i = 0; i < variantCount; i++) {
+        std::cout << "Варіант " << i + 1 << ": ";
+        for (int j = 0; j < tasksPerVariant; j++) {
+            std::cout << variants[i][j] + 1 << " ";
+        }
+        std::cout << '\n';
+    }
     return 0;
 }
