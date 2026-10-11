@@ -11,8 +11,6 @@
 const int MAX_TASKS = 1000, MAX_TASK_LENGTH = 500, MAX_VARIANTS = 100, MAX_TASKS_PER_VARIANT = 50;
 // Масив текстів завдань
 char tasks[MAX_TASKS][MAX_TASK_LENGTH];
-int variantCount;
-int tasksPerVariant;
 // Матриця індексів завдань для варіантів
 int variants[MAX_VARIANTS][MAX_TASKS_PER_VARIANT];
 // Кількість завдань, зчитаних із файлу
@@ -55,24 +53,46 @@ bool loadTasks(const char* filename,char tasks[][MAX_TASK_LENGTH],int& taskCount
         std::cerr << "Файл не містить завдань.\n";
         return false;
     }
+    std::cout << "Завантажено завдань: "<< taskCount << "\n\n";
     return true;
 }
 // Функція для цілого числа з консолі
-int readPositiveInteger(const char* prompt) {
+int readPositiveInteger(const char* prompt, int minValue, int maxValue) {
     int value;
+
     while (true) {
         std::cout << prompt;
-        if (std::cin >> value) {
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-            return value;
+        if (!(std::cin >> value)) {
+            if (std::cin.eof()) {
+                std::cerr << "Введення недоступне.\n";
+                std::exit(1);
+            }
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'
+            );
+            std::cerr << "Помилка: введіть ціле число.\n";
+            continue;
         }
-        if (std::cin.eof()) {
-            std::cerr << "Введення недоступне.\n";
-            std::exit(1);
+        std::cin.ignore(
+            std::numeric_limits<std::streamsize>::max(), '\n'
+        );
+        if (value < minValue || value > maxValue) {
+            std::cerr << "Помилка: введіть число від "<< minValue << " до " << maxValue << ".\n";
+            continue;
         }
-        std::cin.clear();
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        std::cerr << "Помилка: введіть ціле число.\n";
+        return value;
+    }
+}
+// Функція для виведення параметрів генерації
+bool printParameters(int variantCount, int tasksPerVariant, int taskCount) {
+    if (variantCount != 0 && tasksPerVariant != 0 && taskCount != 0) {
+        std::cout << "\nПараметри генерації:\n";
+        std::cout << "Кількість варіантів: "<< variantCount << '\n';
+        std::cout << "Завдань у кожному варіанті: "<< tasksPerVariant << '\n';
+        return true;
+    } else {
+        std::cerr << "Помилка: параметри генерації не встановлені.\n";
+        return false;
     }
 }
 // Функція для генерації варіантів
@@ -109,7 +129,6 @@ void printVariants(const int variants[][MAX_TASKS_PER_VARIANT],int variantCount,
     }
     std::cout << "\n========================================\n"<< "Генерацію завершено.\n";
 }
-
 bool saveVariants(const char* filename,const int variants[][MAX_TASKS_PER_VARIANT],int variantCount,int tasksPerVariant,const char tasks[][MAX_TASK_LENGTH]) {
     // Відкриваємо файл для запису та перевіряємо його відкриття
     std::ofstream file(filename);
@@ -140,6 +159,7 @@ bool saveVariants(const char* filename,const int variants[][MAX_TASKS_PER_VARIAN
         std::cerr << "Помилка завершення запису файлу.\n";
         return false;
     }
+    std::cout << "\nРезультат збережено у файл variants.txt\n";
     return true;
 }
 int main() {
@@ -149,30 +169,16 @@ int main() {
     std::cout << "Генератор варіантів контрольної роботи\n\n";
     // Завантаження завдань із файлу
     if (!loadTasks("task.txt", tasks, taskCount)) {return 1;}
-    std::cout << "Завантажено завдань: "<< taskCount << "\n\n";
-    // Зчитування кількості варіантів та завдань у кожному варіанті та перевірка їх
-    while(true) {
-        variantCount = readPositiveInteger("Введіть кількість варіантів: \n");
-        if (variantCount < 1 || variantCount > MAX_VARIANTS) {
-            std::cerr << "Помилка: кількість варіантів має бути від 1 до " << MAX_VARIANTS << ".\n";
-        } else {break;}
-    }
-    while(true) {
-        tasksPerVariant = readPositiveInteger("Введіть кількість завдань у варіанті: \n");
-        if (tasksPerVariant < 1 || tasksPerVariant > MAX_TASKS_PER_VARIANT || tasksPerVariant > taskCount) {
-            std::cerr << "Помилка: некоректна кількість завдань у варіанті.\n"<< MAX_TASKS_PER_VARIANT << ".\n";
-        } else {break;}
-    }
-    std::cout << "\nПараметри генерації:\n";
-    std::cout << "Кількість варіантів: "<< variantCount << '\n';
-    std::cout << "Завдань у кожному варіанті: "<< tasksPerVariant << '\n';
+    // Зчитування параметрів генерації
+    int variantCount = readPositiveInteger("Введіть кількість варіантів (1-100): ", 1, MAX_VARIANTS);
+    int tasksPerVariant = readPositiveInteger("Введіть кількість завдань у кожному варіанті (1-50): ", 1, std::min(MAX_TASKS_PER_VARIANT, taskCount));
+    // Виведення параметрів генерації
+    if (!printParameters(variantCount, tasksPerVariant, taskCount)) {return 1;}
     // Генерація варіантів
     generateVariants(variants,variantCount,tasksPerVariant,taskCount);
     // Виведення варіантів у консоль
     printVariants(variants,variantCount,tasksPerVariant,tasks);
-        if (!saveVariants("variants.txt",variants,variantCount,tasksPerVariant,tasks)) {
-        return 1;
-    }
-    std::cout << "\nРезультат збережено у файл variants.txt\n";
+    // Збереження варіантів у файл
+    if (!saveVariants("variants.txt",variants,variantCount,tasksPerVariant,tasks)) {return 1;}
     return 0;
 }
