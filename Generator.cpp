@@ -109,6 +109,39 @@ void printVariants(const int variants[][MAX_TASKS_PER_VARIANT],int variantCount,
     }
     std::cout << "\n========================================\n"<< "Генерацію завершено.\n";
 }
+
+bool saveVariants(const char* filename,const int variants[][MAX_TASKS_PER_VARIANT],int variantCount,int tasksPerVariant,const char tasks[][MAX_TASK_LENGTH]) {
+    // Відкриваємо файл для запису та перевіряємо його відкриття
+    std::ofstream file(filename);
+    if (!file.is_open()) {
+        std::cerr << "Помилка створення файлу: "<< filename << '\n';
+        return false;
+    }
+    // Записуємо результати у файл
+    file << "ГЕНЕРАТОР ВАРІАНТІВ КОНТРОЛЬНОЇ РОБОТИ\n"<< "========================================\n\n"<< "Кількість варіантів: "<< variantCount << '\n'<< "Завдань у кожному варіанті: "<< tasksPerVariant << "\n\n";
+    for (int i = 0; i < variantCount; i++) {
+        file << "========================================\n"<< "ВАРІАНТ №" << i + 1 << '\n'<< "========================================\n";
+        for (int j = 0; j < tasksPerVariant; j++) {
+            int taskIndex = variants[i][j];
+            file << "\nЗавдання " << j + 1<< " (№" << taskIndex + 1<< " у банку):\n"<< tasks[taskIndex] << '\n';
+        }
+        file << '\n';
+    }
+    // Перевірка на помилки запису
+    file.flush();
+    if (!file) {
+        std::cerr << "Помилка запису у файл: "<< filename << '\n';
+        return false;
+    }
+    //Закриваємо файл
+    file.close();
+    // Перевірка на помилки закриття файлу
+    if (file.fail()) {
+        std::cerr << "Помилка завершення запису файлу.\n";
+        return false;
+    }
+    return true;
+}
 int main() {
     // Встановлення кодування консолі на UTF-8
     SetConsoleOutputCP(CP_UTF8);
@@ -137,5 +170,9 @@ int main() {
     generateVariants(variants,variantCount,tasksPerVariant,taskCount);
     // Виведення варіантів у консоль
     printVariants(variants,variantCount,tasksPerVariant,tasks);
+        if (!saveVariants("variants.txt",variants,variantCount,tasksPerVariant,tasks)) {
+        return 1;
+    }
+    std::cout << "\nРезультат збережено у файл variants.txt\n";
     return 0;
 }
