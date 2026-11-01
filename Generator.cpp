@@ -96,7 +96,11 @@ bool printParameters(int variantCount, int tasksPerVariant, int taskCount) {
     }
 }
 // Функція для генерації варіантів
-void generateVariants(int variants[][MAX_TASKS_PER_VARIANT],int variantCount,int tasksPerVariant,int taskCount) {
+bool generateVariants(int variants[][MAX_TASKS_PER_VARIANT],int variantCount,int tasksPerVariant,int taskCount) {
+    if (taskCount < tasksPerVariant) {
+        std::cout << "Помилка: недостатньо завдань у банку для формування варіанта.\n";
+        return false;
+    }
     int indexes[MAX_TASKS];
     // Ініціалізація рандомайзера
     std::random_device rand;
@@ -114,6 +118,7 @@ void generateVariants(int variants[][MAX_TASKS_PER_VARIANT],int variantCount,int
             variants[i][j] = indexes[j];
         }
     }
+    return true;
 }
 // Функція для виведення варіантів у консоль
 void printVariants(const int variants[][MAX_TASKS_PER_VARIANT],int variantCount,int tasksPerVariant,const char tasks[][MAX_TASK_LENGTH]) {
@@ -171,11 +176,13 @@ int main() {
     if (!loadTasks("task.txt", tasks, taskCount)) {return 1;}
     // Зчитування параметрів генерації
     int variantCount = readPositiveInteger("Введіть кількість варіантів (1-100): ", 1, MAX_VARIANTS);
-    int tasksPerVariant = readPositiveInteger("Введіть кількість завдань у кожному варіанті (1-50): ", 1, std::min(MAX_TASKS_PER_VARIANT, taskCount));
+    int tasksPerVariant = readPositiveInteger("Введіть кількість завдань у кожному варіанті (1-50): ", 1, MAX_TASKS_PER_VARIANT);
     // Виведення параметрів генерації
     if (!printParameters(variantCount, tasksPerVariant, taskCount)) {return 1;}
     // Генерація варіантів
-    generateVariants(variants,variantCount,tasksPerVariant,taskCount);
+    if (!generateVariants(variants, variantCount, tasksPerVariant, taskCount)) {
+        return 1;
+    }
     // Виведення варіантів у консоль
     printVariants(variants,variantCount,tasksPerVariant,tasks);
     // Збереження варіантів у файл
