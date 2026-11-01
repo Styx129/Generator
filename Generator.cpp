@@ -96,24 +96,39 @@ bool printParameters(int variantCount, int tasksPerVariant, int taskCount) {
     }
 }
 // Функція для генерації варіантів
-void generateVariants(int variants[][MAX_TASKS_PER_VARIANT],int variantCount,int tasksPerVariant,int taskCount) {
+void generateVariants(int variants[][MAX_TASKS_PER_VARIANT],int taskStats[][2],int variantCount,int tasksPerVariant,int taskCount) {
     int indexes[MAX_TASKS];
+    // Ініціалізація статистики завдань
+    for (int i = 0; i < taskCount; i++) {
+        taskStats[i][0] = i;
+        taskStats[i][1] = 0;
+    }
     // Ініціалізація рандомайзера
     std::random_device rand;
     std::mt19937 generator(rand());
     for (int i = 0; i < variantCount; i++) {
-        // Створюємо масив індексів усіх завдань
-        for (int j = 0; j < taskCount; j++) {
-            indexes[j] = j;
-        }
-        // Рандомайзер індексів завдань
-        std::shuffle(indexes,indexes + taskCount,generator);
-
-        // Записуємо вибрані завдання в матрицю
-        for (int j = 0; j < tasksPerVariant; j++) {
-            variants[i][j] = indexes[j];
-        }
+    // Створюємо масив індексів усіх завдань
+    for (int j = 0; j < taskCount; j++) {
+        indexes[j] = j;
     }
+
+    // Рандомайзер індексів завдань
+    std::shuffle(indexes, indexes + taskCount, generator);
+
+    // Розміщуємо найменш використані завдання першими
+    std::stable_sort(indexes, indexes + taskCount,
+        [&](int a, int b) {
+            return taskStats[a][1] < taskStats[b][1];
+        });
+
+    // Формуємо варіант і оновлюємо статистику
+    for (int j = 0; j < tasksPerVariant; j++) {
+        int taskIndex = indexes[j];
+
+        variants[i][j] = taskIndex;
+        taskStats[taskIndex][1]++;
+    }
+}
 }
 // Функція для виведення варіантів у консоль
 void printVariants(const int variants[][MAX_TASKS_PER_VARIANT],int variantCount,int tasksPerVariant,const char tasks[][MAX_TASK_LENGTH]) {
@@ -175,7 +190,8 @@ int main() {
     // Виведення параметрів генерації
     if (!printParameters(variantCount, tasksPerVariant, taskCount)) {return 1;}
     // Генерація варіантів
-    generateVariants(variants,variantCount,tasksPerVariant,taskCount);
+    int taskStats[MAX_TASKS][2] = {};
+    generateVariants(variants,taskStats,variantCount,tasksPerVariant,taskCount);
     // Виведення варіантів у консоль
     printVariants(variants,variantCount,tasksPerVariant,tasks);
     // Збереження варіантів у файл
