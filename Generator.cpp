@@ -5,7 +5,13 @@
 #include <random>
 #include <algorithm>
 #include <limits>
+#include <cstdlib>
+
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <windows.h>
+
 #include <iomanip>
 
 // Максимальні розміри даних
