@@ -103,7 +103,11 @@ bool printParameters(int variantCount, int tasksPerVariant, int taskCount) {
     }
 }
 // Функція для генерації варіантів
-void generateVariants(int variants[][MAX_TASKS_PER_VARIANT],int taskStats[][2],int variantCount,int tasksPerVariant,int taskCount) {
+bool generateVariants(int variants[][MAX_TASKS_PER_VARIANT],int taskStats[][2],int variantCount,int tasksPerVariant,int taskCount) {
+    if (taskCount < tasksPerVariant) {
+        std::cout << "Помилка: недостатньо завдань у банку для формування варіанта.\n";
+        return false;
+    }
     int indexes[MAX_TASKS];
     // Ініціалізація статистики завдань
     for (int i = 0; i < taskCount; i++) {
@@ -118,24 +122,21 @@ void generateVariants(int variants[][MAX_TASKS_PER_VARIANT],int taskStats[][2],i
     for (int j = 0; j < taskCount; j++) {
         indexes[j] = j;
     }
-
-    // Рандомайзер індексів завдань
+    // Перемішуємо індекси завдань
     std::shuffle(indexes, indexes + taskCount, generator);
 
     // Розміщуємо найменш використані завдання першими
-    std::stable_sort(indexes, indexes + taskCount,
-        [&](int a, int b) {
-            return taskStats[a][1] < taskStats[b][1];
-        });
-
+    std::stable_sort(indexes, indexes + taskCount,[&](int a, int b) {return taskStats[a][1] < taskStats[b][1];});
     // Формуємо варіант і оновлюємо статистику
     for (int j = 0; j < tasksPerVariant; j++) {
         int taskIndex = indexes[j];
-
         variants[i][j] = taskIndex;
         taskStats[taskIndex][1]++;
     }
-}
+    }
+
+    return true;
+
 }
 // Функція для виведення варіантів у консоль
 void printVariants(const int variants[][MAX_TASKS_PER_VARIANT],int variantCount,int tasksPerVariant,const char tasks[][MAX_TASK_LENGTH]) {
@@ -226,12 +227,14 @@ int main() {
     if (!loadTasks("task.txt", tasks, taskCount)) {return 1;}
     // Зчитування параметрів генерації
     int variantCount = readPositiveInteger("Введіть кількість варіантів (1-100): ", 1, MAX_VARIANTS);
-    int tasksPerVariant = readPositiveInteger("Введіть кількість завдань у кожному варіанті (1-50): ", 1, std::min(MAX_TASKS_PER_VARIANT, taskCount));
+    int tasksPerVariant = readPositiveInteger("Введіть кількість завдань у кожному варіанті (1-50): ", 1, MAX_TASKS_PER_VARIANT);
     // Виведення параметрів генерації
     if (!printParameters(variantCount, tasksPerVariant, taskCount)) {return 1;}
     int taskStats[MAX_TASKS][2] = {};
     // Генерація варіантів
-    generateVariants(variants,taskStats,variantCount,tasksPerVariant,taskCount); 
+    if (!generateVariants(variants, taskStats, variantCount, tasksPerVariant, taskCount)) {
+        return 1;
+    }
     // Виведення варіантів у консоль
     printVariants(variants,variantCount,tasksPerVariant,tasks);
     // Виведення статистики використання завдань
